@@ -2,12 +2,50 @@ const User = require('../models').User
 const bcrypt = require('bcrypt')
 const generateAccessToken = require('../utils/generateAccessToken')
 const {successResponse, errorResponse} = require('../utils/defaultResponse')
+const {body} = require("express-validator");
+const generateUsername = require("../utils/generateUsername");
+const {validationResult} = require('express-validator');
+
+async function getRandomUsername() {
+    const username = generateUsername();
+    const userWithUsername = await User.findOne({
+        where: {
+            name: username
+        }
+    })
+    if (userWithUsername) {
+        return getRandomUsername();
+    } else {
+        return username;
+    }
+}
+
 const signUp = async (req, res) => {
-    console.log("called")
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(422).json({...errorResponse, message: errors.array()[0].msg});
+        return;
+    }
     try {
+        const userWithEmail = await User.findOne({
+            where: {
+                email: req.body.email
+            }
+        });
+        if (userWithEmail) {
+            res.status(409).send({
+                success: false,
+                message: "Email already taken!"
+            });
+            return;
+        }
+
+        const username = await getRandomUsername();
+        console.log("username ==> ", username)
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         const userCreated = await User.create({
-            username: req.body.username,
+            name: username,
             email: req.body.email,
             password: hashedPassword
         })
@@ -29,6 +67,12 @@ const signUp = async (req, res) => {
 }
 
 const signIn = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        res.status(422).json({...errorResponse, message: errors.array()[0].msg});
+        return;
+    }
+
     const user = await User.findOne({
         where: {
             email: req.body.email,
@@ -62,4 +106,23 @@ const signIn = async (req, res) => {
 
 }
 
-module.exports = {signUp, signIn}
+
+const validate = (method) => {
+    switch (method) {
+        case 'register': {
+            return [
+                body('email', 'Invalid email!').exists().isEmail(),
+                body('password', "Password is required!").exists(),
+            ]
+        }
+        case 'login': {
+            return [
+                body('email', 'Invalid email!').exists().isEmail(),
+                body('password', "Password is required!").exists(),
+            ]
+        }
+
+    }
+}
+
+module.exports = {signUp, signIn, validate}

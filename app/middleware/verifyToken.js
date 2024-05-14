@@ -6,7 +6,7 @@ const verifyToken = (req, res, next)=> {
     let tokenHeader = req.headers['authorization'];
 
     if (tokenHeader.split(' ')[0] !== 'Bearer') {
-        return res.status(500).send({
+        return res.status(401).send({
             ...errorResponse,
             message: "Incorrect token format",
         });
@@ -15,7 +15,7 @@ const verifyToken = (req, res, next)=> {
     const token = tokenHeader.split(' ')[1];
     console.log("token", token)
     if (!token) {
-        return res.status(403).send({
+        return res.status(401).send({
             ...errorResponse,
             message: "No token provided!",
         });
@@ -23,13 +23,11 @@ const verifyToken = (req, res, next)=> {
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(500).send({
+            return res.status(401).send({
                 ...errorResponse,
                 message : "Unauthorized!",
             });
         }
-        console.log("user Decoded", decoded)
-        console.log("user Decoded", JSON.stringify(decoded))
         req.user = decoded.user;
         console.log("user Decoded", req.user)
         next();
