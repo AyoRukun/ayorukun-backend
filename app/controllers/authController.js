@@ -22,25 +22,7 @@ async function getRandomUsername() {
 
 const signUp = async (req, res) => {
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        res.status(422).json({...errorResponse, message: errors.array()[0].msg});
-        return;
-    }
     try {
-        const userWithEmail = await User.findOne({
-            where: {
-                email: req.body.email
-            }
-        });
-        if (userWithEmail) {
-            res.status(409).send({
-                success: false,
-                message: "Email already taken!"
-            });
-            return;
-        }
-
         const username = await getRandomUsername();
         console.log("username ==> ", username)
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
@@ -67,24 +49,23 @@ const signUp = async (req, res) => {
 }
 
 const signIn = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        res.status(422).json({...errorResponse, message: errors.array()[0].msg});
-        return;
-    }
 
-    const user = await User.findOne({
+    const userLogedIn = await User.findOne({
         where: {
             email: req.body.email,
         }
     })
-    if (!user) {
+    if (!userLogedIn) {
         res.status(404).send({
             ...errorResponse,
             message: "User not found!"
         })
+        return;
     }
-    const hashedPass = user.password
+    console.log("password ==> ", userLogedIn)
+    console.log("password ==> ", userLogedIn.password)
+
+    const hashedPass = userLogedIn.password
     if (!await bcrypt.compare(req.body.password, hashedPass)) {
         res.status(401).send({
             ...errorResponse,
@@ -95,11 +76,11 @@ const signIn = async (req, res) => {
     }
     console.log("---------> Login Successful")
     console.log("---------> Generating accessToken")
-    const token = generateAccessToken({user: user})
+    const token = generateAccessToken({user: userLogedIn})
     res.send({
         ...successResponse,
         data: {
-            user: user,
+            user: userLogedIn,
             accessToken: token
         }
     })
@@ -107,22 +88,5 @@ const signIn = async (req, res) => {
 }
 
 
-const validate = (method) => {
-    switch (method) {
-        case 'register': {
-            return [
-                body('email', 'Invalid email!').exists().isEmail(),
-                body('password', "Password is required!").exists(),
-            ]
-        }
-        case 'login': {
-            return [
-                body('email', 'Invalid email!').exists().isEmail(),
-                body('password', "Password is required!").exists(),
-            ]
-        }
 
-    }
-}
-
-module.exports = {signUp, signIn, validate}
+module.exports = {signUp, signIn}

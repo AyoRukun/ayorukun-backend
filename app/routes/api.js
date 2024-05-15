@@ -1,13 +1,18 @@
-const userController = require('../controllers/userController')
+const authController = require('../controllers/authController')
 const reportController = require('../controllers/reportController')
 const verifyToken = require('../middleware/verifyToken')
+const authValidator = require('../middleware/validator/authValidator')
+const validate = require("../middleware/validator/index");
+
+
+
 const useApiRoute = (app) => {
     //     auth
-    app.post('/auth/register', [ userController.validate("register")], userController.signUp);
-    app.post('/auth/login', [ userController.validate("login")], userController.signIn);
+    app.post('/auth/register', [ validate(authValidator("register"))], authController.signUp);
+    app.post('/auth/login', [ validate(authValidator("login"))], authController.signIn);
 
     // bully-report
-    app.post('/reports',  [verifyToken], reportController.create);
+    app.post('/reports',  [verifyToken,  ], reportController.create);
 
 
 }
