@@ -5,6 +5,7 @@ const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const {body} = require("express-validator");
 const generateUsername = require("../utils/generateUsername");
 const {validationResult} = require('express-validator');
+const {verify} = require("jsonwebtoken");
 
 async function getRandomUsername() {
     const username = generateUsername();
@@ -87,6 +88,30 @@ const signIn = async (req, res) => {
 
 }
 
+const check = async (req, res) => {
+    let tokenHeader = req.headers['authorization'];
+    const token = tokenHeader.split(' ')[1];
+
+    verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({
+                ...errorResponse,
+                message : "Unauthorized!",
+            });
+        }
+        res.send({
+            ...successResponse,
+            data: {
+                user: decoded.user,
+                accessToken: token,
+                expired_at :  new Date(decoded.exp*1000)
+            }
+        })
+
+    })
+
+}
 
 
-module.exports = {signUp, signIn}
+
+module.exports = {signUp, signIn,check}
