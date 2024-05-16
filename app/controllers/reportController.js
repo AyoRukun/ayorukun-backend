@@ -29,7 +29,7 @@ const create = async (req, res) => {
         }
 
         const t = await sequelize.transaction();
-        const {title, content, school_name, case_date, report_as} = req.body
+        const {title, content, school_name, case_date, report_as,region} = req.body
         try {
 
             const reportFiles = []
@@ -46,6 +46,7 @@ const create = async (req, res) => {
                     title,
                     content,
                     school_name,
+                    region,
                     case_date,
                     report_as,
                     report_files: reportFiles,
