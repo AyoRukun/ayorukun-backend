@@ -5,6 +5,12 @@ const verifyToken = (req, res, next)=> {
     console.log("req.headers",req.headers)
     let tokenHeader = req.headers['authorization'];
 
+    if (!tokenHeader){
+        return res.status(401).send({
+            ...errorResponse,
+            message: "Unauthorized!",
+        });
+    }
     if (tokenHeader.split(' ')[0] !== 'Bearer') {
         return res.status(401).send({
             ...errorResponse,
