@@ -6,6 +6,7 @@ const reportFileUpload = require("../middleware/reportFileUpload")
 const multer = require("multer");
 const {validationResult} = require("express-validator");
 const reportValidator = require('../middleware/validator/reportValidator')
+const fs = require("fs");
 const create = async (req, res) => {
 
 
@@ -43,6 +44,7 @@ const create = async (req, res) => {
             }
 
             const report = await Report.create({
+                id : 3,
                     title,
                     content,
                     school_name,
@@ -64,7 +66,15 @@ const create = async (req, res) => {
             })
 
         } catch (e) {
-            console.log("error => ", e)
+            for (let i = 0; i < req.files.length; i++) {
+                const file = req.files[i];
+                fs.unlink(file.path,(err) => {
+                    if (err) {
+                        console.error(err);
+                    }
+                    console.log(`File removed ${file.path}`);
+                })
+            }
             await t.rollback();
             res.status(500).send({
                 ...errorResponse,

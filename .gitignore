@@ -2,3 +2,5 @@
 node_modules
 app/db/config/dbConfig.json
 .env
+
+public/uploads/
