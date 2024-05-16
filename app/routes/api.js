@@ -15,6 +15,7 @@ const useApiRoute = (app) => {
 
     // report
     app.post('/reports',  [verifyToken,  ], reportController.create);
+    app.get('/reports',  [verifyToken,  ], reportController.index);
 
     //region
     app.get('/region/province-regency', [verifyToken] ,regionController.searchProvinceRegency)

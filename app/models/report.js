@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     Report.init({
         title: DataTypes.STRING,
         content: DataTypes.TEXT,
+        region: DataTypes.STRING,
         school_name: DataTypes.STRING,
         case_date: DataTypes.DATE,
         report_as: DataTypes.STRING,

@@ -73,9 +73,28 @@ const create = async (req, res) => {
             })
         }
     })
+}
 
+const index = async (req, res) => {
+    try{
+        const reports = await  Report.findAll({
+            include: [{model: ReportFile, as: "report_files"}],
+        })
+        res.send({
+            ...successResponse,
+            data: {
+                reports: reports
+            }
+        })
 
+    }catch (e){
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
 }
 
 
-module.exports = {create}
+module.exports = {create, index}
