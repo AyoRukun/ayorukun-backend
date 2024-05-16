@@ -44,7 +44,6 @@ const create = async (req, res) => {
             }
 
             const report = await Report.create({
-                id : 3,
                     title,
                     content,
                     school_name,
