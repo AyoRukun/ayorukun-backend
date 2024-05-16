@@ -7,7 +7,10 @@ module.exports = (method) => {
             return  checkSchema({
                 email: {
                     notEmpty : true ,
-                    normalizeEmail: true,
+                    isEmail : {
+                        errorMessage : "Invalid email!"
+                    },
+                    normalizeEmail: false,
                     custom: {
                         options: value => {
                             return User.findOne({
