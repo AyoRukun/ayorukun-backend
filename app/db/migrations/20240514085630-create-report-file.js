@@ -13,9 +13,11 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 references: {model: 'reports', key: 'id'},
                 onDelete: 'CASCADE',
+                allowNull: false,
             },
             path: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                allowNull: false,
             },
             type: {
                 type: Sequelize.STRING

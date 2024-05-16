@@ -14,10 +14,17 @@ module.exports = (sequelize, DataTypes) => {
             this.hasMany(models.ReportFile, {
                 foreignKey: 'report_id',
                 sourceKey : 'id',
-                name: 'reportId',
+                name: 'reports',
                 onDelete: "cascade",
                 as : "report_files"
             })
+            this.belongsTo(models.User, {
+                foreignKey: "user_id",
+                targetKey: "id",
+                as: "user",
+                onDelete: "CASCADE"
+            })
+
 
         }
     }

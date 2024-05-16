@@ -1,5 +1,6 @@
 const Report = require('../models').Report
 const ReportFile = require('../models').ReportFile
+const User = require('../models').User
 const sequelize = require('../models').sequelize
 const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const reportFileUpload = require("../middleware/reportFileUpload")
@@ -28,9 +29,10 @@ const create = async (req, res) => {
             res.status(400).json({...errorResponse, message: err.message})
             return
         }
+        console.log("\nuser ==> \n", req.user)
 
         const t = await sequelize.transaction();
-        const {title, content, school_name, case_date, report_as,region} = req.body
+        const {title, content, school_name, case_date, report_as, region} = req.body
         try {
 
             const reportFiles = []
@@ -44,6 +46,7 @@ const create = async (req, res) => {
             }
 
             const report = await Report.create({
+                    user_id: req.user.id,
                     title,
                     content,
                     school_name,
@@ -67,7 +70,7 @@ const create = async (req, res) => {
         } catch (e) {
             for (let i = 0; i < req.files.length; i++) {
                 const file = req.files[i];
-                fs.unlink(file.path,(err) => {
+                fs.unlink(file.path, (err) => {
                     if (err) {
                         console.error(err);
                     }
@@ -85,18 +88,28 @@ const create = async (req, res) => {
 }
 
 const index = async (req, res) => {
-    try{
-        const reports = await  Report.findAll({
-            include: [{model: ReportFile, as: "report_files"}],
+    try {
+        const reports = await Report.findAll({
+            include: [{model: ReportFile, as: "report_files"}, {model: User, as: "user"}],
         })
         res.send({
             ...successResponse,
             data: {
-                reports: reports
+                reports: reports.map((r) => {
+                    const report = r.toJSON()
+                    const username = report.user.name
+                    delete report.user_id
+                    report.user = {
+                        username,
+                        image_url: report.user.image_url
+                    }
+                    return report;
+                })
             }
         })
 
-    }catch (e){
+    } catch (e) {
+        console.log("error " + e)
         res.status(500).send({
             ...errorResponse,
             message: "Something went wrong!",

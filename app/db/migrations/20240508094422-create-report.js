@@ -9,20 +9,31 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      user_id : {
+        type: Sequelize.INTEGER,
+        references: {model: 'users', key: 'id'},
+        onDelete: 'CASCADE',
+        allowNull: false,
+      },
       title: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       content: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
+        allowNull: false,
       },
       school_name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       case_date: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        allowNull: false,
       },
       report_as: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,

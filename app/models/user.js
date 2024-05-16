@@ -6,13 +6,16 @@ const {
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
+
     static associate(models) {
-      // define association here
+      this.hasMany(models.Report, {
+        foreignKey: 'user_id',
+        sourceKey : 'id',
+        name: 'users',
+        onDelete: "cascade",
+        as : "reports"
+      })
+
     }
   }
 
@@ -20,6 +23,12 @@ module.exports = (sequelize, DataTypes) => {
     name: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
+    image_url : {
+      type: DataTypes.VIRTUAL,
+      get() {
+        return `https://ui-avatars.com/api/?name=${this.name}&background=random`;
+      },
+    }
   }, {
     sequelize,
     modelName: 'User',
