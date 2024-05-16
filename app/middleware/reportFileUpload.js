@@ -8,9 +8,9 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         const fileName = file.originalname.split('.')[0];
         const fileExtension = file.originalname.split('.').slice(-1);
-        console.log("fileExtension",fileName)
-        console.log("fileExtension",fileExtension)
-        cb(null, `${fileName.replaceAll(" ", "_")}-${Date.now()}.${fileExtension}`);
+        console.log("typeof fileName", typeof fileName)
+        cb(null, `${file.fieldname}-${Date.now()}.${fileExtension}`);
+
     }
 });
 
