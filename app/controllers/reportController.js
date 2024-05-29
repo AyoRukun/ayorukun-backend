@@ -1,6 +1,7 @@
 const Report = require('../models').Report
 const ReportFile = require('../models').ReportFile
 const User = require('../models').User
+const ReportComment = require('../models').ReportComment
 const sequelize = require('../models').sequelize
 const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const reportFileUpload = require("../middleware/reportFileUpload")
@@ -8,6 +9,8 @@ const multer = require("multer");
 const {validationResult} = require("express-validator");
 const reportValidator = require('../middleware/validator/reportValidator')
 const fs = require("fs");
+const {Sequelize} = require("sequelize");
+
 const create = async (req, res) => {
 
 
@@ -90,7 +93,16 @@ const create = async (req, res) => {
 const index = async (req, res) => {
     try {
         const reports = await Report.findAll({
-            include: [{model: ReportFile, as: "report_files"}, {model: User, as: "user"}],
+            attributes: {
+                include: [[Sequelize.fn("COUNT", Sequelize.col("comments.id")), "totalComments"]]
+            },
+            include: [
+                {model: ReportFile, as: "report_files"},
+                {model: User, as: "user"},
+                {model: ReportComment, as: "comments", attributes: []},
+
+            ],
+            group: ['Report.id', 'report_files.id']
         })
         res.send({
             ...successResponse,
@@ -119,4 +131,81 @@ const index = async (req, res) => {
 }
 
 
-module.exports = {create, index}
+const createComment = async (req, res) => {
+
+
+    const {content} = req.body
+    const reportId = req.params.id
+    const user = req.user
+    try {
+        let comment = await ReportComment.create({
+                content,
+                user_id: req.user.id,
+                report_id: reportId,
+            },        )
+
+        comment = comment.toJSON()
+        delete comment.user_id;
+        comment.owner = {
+            id : user.id,
+            username : user.name,
+            image_url: user.image_url,
+        }
+
+        res.send({
+            ...successResponse,
+            data: {
+                comment: comment            }
+        })
+
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
+
+}
+const getDetailReport = async (req, res) => {
+
+
+    const reportId = req.params.id
+    const user = req.user
+    try {
+        const reports = await Report.findOne({
+            where : {
+                id : reportId
+            },
+            // attributes: {
+            //     include: [[Sequelize.fn("COUNT", Sequelize.col("report_comments.id")), "totalComments"]]
+            // },
+            include: [
+                {model: ReportFile, as: "report_files"},
+                {model: User, as: "user"},
+                {model: ReportComment, as: "comments", include : [{model: User, as: "user"}]},
+
+            ]
+        })
+        res.send({
+            ...successResponse,
+            data: {
+                report : reports
+            }
+        })
+
+
+
+
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
+
+}
+
+
+module.exports = {create, index, createComment,getDetailReport}

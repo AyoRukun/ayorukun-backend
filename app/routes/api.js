@@ -1,8 +1,10 @@
 const authController = require('../controllers/authController')
 const reportController = require('../controllers/reportController')
+const discussionController = require('../controllers/discussionController')
 const regionController = require('../controllers/regionController')
 const verifyToken = require('../middleware/verifyToken')
 const authValidator = require('../middleware/validator/authValidator')
+const discussionValidator = require('../middleware/validator/discussionValidator')
 const validate = require("../middleware/validator/index");
 
 
@@ -15,7 +17,17 @@ const useApiRoute = (app) => {
 
     // report
     app.post('/reports',  [verifyToken,  ], reportController.create);
-    app.get('/reports',  [verifyToken,  ], reportController.index);
+    app.get('/reports', reportController.index);
+    app.post(`/reports/:id/comments`,  [verifyToken,  ], reportController.createComment);
+    app.get(`/reports/:id`, reportController.getDetailReport);
+
+    // report
+    app.post('/discussions',  [verifyToken, [ validate(discussionValidator("create"))] ], discussionController.create);
+    app.get('/discussions', discussionController.index);
+    app.post(`/discussions/:id/comments`,  [verifyToken,  ], discussionController.createComment);
+    app.get(`/discussions/:id`, discussionController.getDetailReport);
+
+
 
     //region
     app.get('/region/province-regency', [verifyToken] ,regionController.searchProvinceRegency)

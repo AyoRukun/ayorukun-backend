@@ -16,6 +16,15 @@ module.exports = (sequelize, DataTypes) => {
         as : "reports"
       })
 
+      this.hasMany(models.Discussion, {
+        foreignKey: 'user_id',
+        sourceKey : 'id',
+        name: 'users',
+        onDelete: "cascade",
+        as : "discussions"
+      })
+
+
     }
   }
 
@@ -32,7 +41,10 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
-    tableName : 'users'
+    tableName : 'users',
+    defaultScope: {
+      attributes: { exclude: ['password', 'email', 'createdAt', 'updatedAt'] },
+    }
 
   });
   return User;
