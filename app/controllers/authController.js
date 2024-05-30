@@ -32,10 +32,13 @@ const signUp = async (req, res) => {
             email: req.body.email,
             password: hashedPassword
         })
+        const user = userCreated.toJSON()
+        delete user.password
+
         res.send({
             ...successResponse,
             data: {
-                user: userCreated
+                user: user
             }
         })
 
@@ -54,7 +57,8 @@ const signIn = async (req, res) => {
     const userLogedIn = await User.findOne({
         where: {
             email: req.body.email,
-        }
+        },
+        attributes: ['id', 'password' , 'email', 'name', 'image_url'],
     })
     if (!userLogedIn) {
         res.status(404).send({
@@ -63,9 +67,9 @@ const signIn = async (req, res) => {
         })
         return;
     }
-    console.log("password ==> ", userLogedIn)
-    console.log("password ==> ", userLogedIn.password)
 
+    console.log("password ==> ", req.body.password)
+    console.log("password ==> ", userLogedIn.password)
     const hashedPass = userLogedIn.password
     if (!await bcrypt.compare(req.body.password, hashedPass)) {
         res.status(401).send({
@@ -77,11 +81,16 @@ const signIn = async (req, res) => {
     }
     console.log("---------> Login Successful")
     console.log("---------> Generating accessToken")
+    const user = userLogedIn.toJSON()
+
+    delete user.password
+    console.log("password ==> ", userLogedIn.password)
+
     const token = generateAccessToken({user: userLogedIn})
     res.send({
         ...successResponse,
         data: {
-            user: userLogedIn,
+            user: user,
             accessToken: token
         }
     })
