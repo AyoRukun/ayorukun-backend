@@ -8,16 +8,16 @@ const {QueryTypes} = require("sequelize");
 const searchProvinceRegency = async (req, res) => {
 
     const q =  req.query.q
-    const query = `
-        SELECT p.id as province_id , p.name as province_name, 
-               r.id as regency_id , r.name as regency_name, 
-               d.name as district_name
-        FROM reg_provinces as p
-        INNER JOIN reg_regencies as r ON p.id = r.province_id
-        INNER JOIN reg_districts as d ON r.id = d.regency_id
-        WHERE p.name LIKE "%${q}%" 
-         OR r.name  LIKE "%${q}%"  
-        OR d.name  LIKE "%${q}%"`.replaceAll("\n", " ")
+    const query =
+        "SELECT p.id as province_id , p.name as province_name, "+
+        "r.id as regency_id , r.name as regency_name, "+
+        " d.name as district_name "+
+        "FROM reg_provinces as p "+
+        "INNER JOIN reg_regencies as r ON p.id = r.province_id "+
+        "INNER JOIN reg_districts as d ON r.id = d.regency_id "+
+        "WHERE p.name LIKE '%"+q+"' "+
+        "OR r.name  LIKE '%"+q+"%' "+
+        "OR d.name  LIKE '%"+q+"%' ";
     const results = await sequelize.query( query, {
         type: QueryTypes.SELECT,
     });
