@@ -15,13 +15,19 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "cascade",
         as : "reports"
       })
-
       this.hasMany(models.Discussion, {
         foreignKey: 'user_id',
         sourceKey : 'id',
         name: 'users',
         onDelete: "cascade",
         as : "discussions"
+      })
+      this.hasMany(models.ReportVote, {
+        foreignKey: 'user_id',
+        sourceKey : 'id',
+        name: 'users',
+        onDelete: "cascade",
+        as : "report_votes"
       })
 
 

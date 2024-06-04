@@ -20,6 +20,8 @@ const useApiRoute = (app) => {
     app.get('/reports', reportController.index);
     app.post(`/reports/:id/comments`,  [verifyToken,  ], reportController.createComment);
     app.get(`/reports/:id`, reportController.getDetailReport);
+    app.get(`/reports/:id/like`, [verifyToken,  ], reportController.likeReport);
+    app.get(`/reports/:id/unlike`,[verifyToken,  ], reportController.unlikeReport);
 
     // report
     app.post('/discussions',  [verifyToken, [ validate(discussionValidator("create"))] ], discussionController.create);

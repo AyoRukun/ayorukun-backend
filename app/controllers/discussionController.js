@@ -6,12 +6,13 @@ const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const {Sequelize} = require("sequelize");
 
 const create = async (req, res) => {
-    const {content} = req.body
+    const {content, title} = req.body
 
     console.log("\nuser ==> \n", req.user)
     try {
         const discussion = await Discussion.create({
                 user_id: req.user.id,
+                title,
                 content,
             },
             {},)
@@ -85,7 +86,7 @@ const createComment = async (req, res) => {
             content,
             user_id: req.user.id,
             discussion_id: discussionId,
-            parent_id : parent_id
+            parent_id: parent_id
         },)
 
         comment = comment.toJSON()
@@ -114,7 +115,6 @@ const createComment = async (req, res) => {
 }
 const getDetailDiscussion = async (req, res) => {
 
-
     const discussionId = req.params.id
     const user = req.user
     try {
@@ -124,7 +124,7 @@ const getDetailDiscussion = async (req, res) => {
             },
             include: [
                 {model: User, as: "user"},
-                {model: DiscussionComment, as: "comments", include : [{model: User, as: "user"}]},
+                {model: DiscussionComment, as: "comments", include: [{model: User, as: "user"}]},
             ],
         })
         res.send({

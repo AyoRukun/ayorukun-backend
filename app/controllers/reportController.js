@@ -2,6 +2,7 @@ const Report = require('../models').Report
 const ReportFile = require('../models').ReportFile
 const User = require('../models').User
 const ReportComment = require('../models').ReportComment
+const ReportVote = require('../models').ReportVote
 const sequelize = require('../models').sequelize
 const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const reportFileUpload = require("../middleware/reportFileUpload")
@@ -48,7 +49,7 @@ const create = async (req, res) => {
                 reportFiles.push(reportFile)
             }
 
-            const report = await Report.create({
+            let report = await Report.create({
                     user_id: req.user.id,
                     title,
                     content,
@@ -63,6 +64,8 @@ const create = async (req, res) => {
                     transaction: t
                 },)
             await t.commit();
+            report = report.toJSON();
+            report.likeBy = []
             res.send({
                 ...successResponse,
                 data: {
@@ -100,23 +103,27 @@ const index = async (req, res) => {
                 {model: ReportFile, as: "report_files"},
                 {model: User, as: "user"},
                 {model: ReportComment, as: "comments", attributes: []},
-
             ],
             group: ['Report.id', 'report_files.id']
         })
+        const reportsData = []
+        for (let i = 0; i < reports.length; i += 1) {
+            const votes = await reports[i].getVotes()
+            const report = reports[i].toJSON()
+            report.likedBy = votes.filter((v) => v.vote_type === 1).map((v) => v.id);
+            const username = report.user.name
+            delete report.user_id
+            report.user = {
+                username,
+                image_url: report.user.image_url
+            }
+            reportsData.push(report)
+
+        }
         res.send({
             ...successResponse,
             data: {
-                reports: reports.map((r) => {
-                    const report = r.toJSON()
-                    const username = report.user.name
-                    delete report.user_id
-                    report.user = {
-                        username,
-                        image_url: report.user.image_url
-                    }
-                    return report;
-                })
+                reports: reportsData
             }
         })
 
@@ -139,23 +146,24 @@ const createComment = async (req, res) => {
     const user = req.user
     try {
         let comment = await ReportComment.create({
-                content,
-                user_id: req.user.id,
-                report_id: reportId,
-            },        )
+            content,
+            user_id: req.user.id,
+            report_id: reportId,
+        },)
 
         comment = comment.toJSON()
         delete comment.user_id;
         comment.owner = {
-            id : user.id,
-            username : user.name,
+            id: user.id,
+            username: user.name,
             image_url: user.image_url,
         }
 
         res.send({
             ...successResponse,
             data: {
-                comment: comment            }
+                comment: comment
+            }
         })
 
     } catch (e) {
@@ -168,35 +176,97 @@ const createComment = async (req, res) => {
 
 }
 const getDetailReport = async (req, res) => {
-
-
     const reportId = req.params.id
-    const user = req.user
     try {
-        const reports = await Report.findOne({
-            where : {
-                id : reportId
+        const report = await Report.findOne({
+            where: {
+                id: reportId
             },
-            // attributes: {
-            //     include: [[Sequelize.fn("COUNT", Sequelize.col("report_comments.id")), "totalComments"]]
-            // },
             include: [
                 {model: ReportFile, as: "report_files"},
                 {model: User, as: "user"},
-                {model: ReportComment, as: "comments", include : [{model: User, as: "user"}]},
-
+                {model: ReportComment, as: "comments", include: [{model: User, as: "user"}]},
             ]
         })
         res.send({
             ...successResponse,
             data: {
-                report : reports
+                report: report
             }
         })
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
+}
+const likeReport = async (req, res) => {
+    const reportId = req.params.id
+    const user = req.user
+    try {
+        let reportVote = await ReportVote.findOne({
+            where: {
+                report_id: reportId,
+                user_id: user.id
+            },
+        })
 
+        if (!reportVote) {
+            reportVote = await ReportVote.create({
+                user_id: user.id,
+                report_id: reportId,
+                vote_type: 1
+            })
+        } else {
+            await reportVote.update({
+                vote_type: 1
+            })
+        }
+        res.send({
+            ...successResponse,
+            data: {
+                vote: reportVote
+            }
+        })
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
 
+}
+const unlikeReport = async (req, res) => {
+    const reportId = req.params.id
+    const user = req.user
+    try {
+        let reportVote = await ReportVote.findOne({
+            where: {
+                report_id: reportId,
+                user_id: user.id
+            },
+        })
 
-
+        if (!reportVote) {
+            reportVote = await ReportVote.create({
+                user_id: user.id,
+                report_id: reportId,
+                vote_type: 0
+            })
+        } else {
+            await reportVote.update({
+                vote_type: 0
+            })
+        }
+        res.send({
+            ...successResponse,
+            data: {
+                vote: reportVote
+            }
+        })
     } catch (e) {
         res.status(500).send({
             ...errorResponse,
@@ -208,4 +278,4 @@ const getDetailReport = async (req, res) => {
 }
 
 
-module.exports = {create, index, createComment,getDetailReport}
+module.exports = {create, index, createComment, getDetailReport, likeReport, unlikeReport}
