@@ -23,6 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "cascade",
         as : "comments"
       })
+      this.hasMany(models.DiscussionVote, {
+        foreignKey: 'discussion_id',
+        sourceKey : 'id',
+        name: 'discussions',
+        onDelete: "cascade",
+        as : "votes"
+      })
+
 
 
     }

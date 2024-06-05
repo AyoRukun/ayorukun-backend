@@ -3,17 +3,17 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class DiscussionComment extends Model {
+  class DiscussionCommentVote extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      this.belongsTo(models.Discussion, {
-        foreignKey: "discussion_id",
+      this.belongsTo(models.DiscussionComment, {
+        foreignKey: "comment_id",
         targetKey: "id",
-        as: "discussion",
+        as: "comment",
         onDelete: "CASCADE"
       })
       this.belongsTo(models.User, {
@@ -22,24 +22,16 @@ module.exports = (sequelize, DataTypes) => {
         as: "user",
         onDelete: "CASCADE"
       })
-      this.hasMany(models.DiscussionCommentVote, {
-        foreignKey: 'comment_id',
-        sourceKey : 'id',
-        name: 'comments',
-        onDelete: "cascade",
-        as : "votes"
-      })
-
-
     }
   }
-  DiscussionComment.init({
-    content: DataTypes.STRING,
-    parent_id: DataTypes.INTEGER,
+  DiscussionCommentVote.init({
+    comment_id: DataTypes.INTEGER,
+    user_id: DataTypes.INTEGER,
+    vote_type: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'DiscussionComment',
-    tableName : 'discussion_comments',
+    modelName: 'DiscussionCommentVote',
+    tableName: 'discussion_comment_votes',
   });
-  return DiscussionComment;
+  return DiscussionCommentVote;
 };

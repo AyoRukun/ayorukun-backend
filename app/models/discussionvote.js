@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class DiscussionComment extends Model {
+  class DiscussionVote extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -22,24 +22,16 @@ module.exports = (sequelize, DataTypes) => {
         as: "user",
         onDelete: "CASCADE"
       })
-      this.hasMany(models.DiscussionCommentVote, {
-        foreignKey: 'comment_id',
-        sourceKey : 'id',
-        name: 'comments',
-        onDelete: "cascade",
-        as : "votes"
-      })
-
-
     }
   }
-  DiscussionComment.init({
-    content: DataTypes.STRING,
-    parent_id: DataTypes.INTEGER,
+  DiscussionVote.init({
+    discussion_id: DataTypes.INTEGER,
+    user_id: DataTypes.INTEGER,
+    vote_type: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'DiscussionComment',
-    tableName : 'discussion_comments',
+    modelName: 'DiscussionVote',
+    tableName : 'discussion_votes'
   });
-  return DiscussionComment;
+  return DiscussionVote;
 };

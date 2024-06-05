@@ -3,6 +3,7 @@ const ReportFile = require('../models').ReportFile
 const User = require('../models').User
 const ReportComment = require('../models').ReportComment
 const ReportVote = require('../models').ReportVote
+const ReportCommentVote = require('../models').ReportCommentVote
 const sequelize = require('../models').sequelize
 const {successResponse, errorResponse} = require('../utils/defaultResponse')
 const reportFileUpload = require("../middleware/reportFileUpload")
@@ -110,7 +111,7 @@ const index = async (req, res) => {
         for (let i = 0; i < reports.length; i += 1) {
             const votes = await reports[i].getVotes()
             const report = reports[i].toJSON()
-            report.likedBy = votes.filter((v) => v.vote_type === 1).map((v) => v.id);
+            report.likedBy = votes.filter((v) => v.vote_type === 1).map((v) => v.user_id);
             const username = report.user.name
             delete report.user_id
             report.user = {
@@ -185,13 +186,28 @@ const getDetailReport = async (req, res) => {
             include: [
                 {model: ReportFile, as: "report_files"},
                 {model: User, as: "user"},
-                {model: ReportComment, as: "comments", include: [{model: User, as: "user"}]},
+                {
+                    model: ReportComment, as: "comments", include: [
+                        {model: User, as: "user"},]
+                },
             ]
         })
+
+        const commentIds = report.comments.map((c) => c.id);
+        const commentVotes = await ReportCommentVote.findAll({
+            where: {
+                comment_id: commentIds,
+                vote_type: 1
+            }
+        })
+        const reportData = report.toJSON();
+        for (const comment of reportData.comments) {
+            comment.likedBy = commentVotes.filter((v) => v.comment_id === comment.id).map((v) => v.user_id)
+        }
         res.send({
             ...successResponse,
             data: {
-                report: report
+                report: reportData
             }
         })
     } catch (e) {
@@ -202,6 +218,7 @@ const getDetailReport = async (req, res) => {
         })
     }
 }
+
 const likeReport = async (req, res) => {
     const reportId = req.params.id
     const user = req.user
@@ -237,8 +254,8 @@ const likeReport = async (req, res) => {
             errors: e
         })
     }
-
 }
+
 const unlikeReport = async (req, res) => {
     const reportId = req.params.id
     const user = req.user
@@ -277,5 +294,82 @@ const unlikeReport = async (req, res) => {
 
 }
 
+const likeComment = async (req, res) => {
+    const commentId = req.params.commentId
+    console.log(`Tes comment ${commentId}`)
+    const user = req.user
+    try {
+        let vote = await ReportCommentVote.findOne({
+            where: {
+                comment_id: commentId,
+                user_id: user.id
+            },
+        })
 
-module.exports = {create, index, createComment, getDetailReport, likeReport, unlikeReport}
+        if (!vote) {
+            vote = await ReportCommentVote.create({
+                comment_id: commentId,
+                user_id: user.id,
+                vote_type: 1
+            })
+        } else {
+            await vote.update({
+                vote_type: 1
+            })
+        }
+        res.send({
+            ...successResponse,
+            data: {
+                vote: vote
+            }
+        })
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
+}
+
+const unlikeComment = async (req, res) => {
+    const commentId = req.params.commentId
+
+    const user = req.user
+    try {
+        let vote = await ReportCommentVote.findOne({
+            where: {
+                comment_id: commentId,
+                user_id: user.id
+            },
+        })
+
+        if (!vote) {
+            vote = await ReportCommentVote.create({
+                user_id: user.id,
+                comment_id: commentId,
+                vote_type: 0
+            })
+        } else {
+            await vote.update({
+                vote_type: 0
+            })
+        }
+        res.send({
+            ...successResponse,
+            data: {
+                vote: vote
+            }
+        })
+    } catch (e) {
+        res.status(500).send({
+            ...errorResponse,
+            message: "Something went wrong!",
+            errors: e
+        })
+    }
+
+}
+
+
+module.exports = {create, index, createComment, getDetailReport, likeReport, unlikeReport, likeComment, unlikeComment}

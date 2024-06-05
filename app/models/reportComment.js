@@ -18,6 +18,14 @@ module.exports = (sequelize, DataTypes) => {
         as: "user",
         onDelete: "CASCADE"
       })
+      this.hasMany(models.ReportCommentVote, {
+        foreignKey: 'comment_id',
+        sourceKey : 'id',
+        name: 'comments',
+        onDelete: "cascade",
+        as : "votes"
+      })
+
 
     }
   }
