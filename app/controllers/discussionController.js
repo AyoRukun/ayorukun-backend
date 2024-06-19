@@ -97,11 +97,13 @@ const createComment = async (req, res) => {
 
         comment = comment.toJSON()
         delete comment.user_id;
-        comment.owner = {
+        comment.user = {
             id: user.id,
             username: user.name,
             image_url: user.image_url,
         }
+        comment.likedBy =[]
+
 
         res.send({
             ...successResponse,
